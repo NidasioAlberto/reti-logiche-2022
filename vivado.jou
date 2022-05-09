@@ -1,0 +1,33 @@
+#-----------------------------------------------------------
+# Vivado v2021.2 (64-bit)
+# SW Build 3367213 on Tue Oct 19 02:47:39 MDT 2021
+# IP Build 3369179 on Thu Oct 21 08:25:16 MDT 2021
+# Start of session at: Mon May  9 20:46:42 2022
+# Process ID: 33413
+# Current directory: /home/alberton/Desktop/reti-logiche-2022
+# Command line: vivado
+# Log file: /home/alberton/Desktop/reti-logiche-2022/vivado.log
+# Journal file: /home/alberton/Desktop/reti-logiche-2022/vivado.jou
+# Running On: pop-os, OS: Linux, CPU Frequency: 800.000 MHz, CPU Physical cores: 4, Host memory: 16704 MB
+#-----------------------------------------------------------
+start_gui
+open_project /home/alberton/Desktop/reti-logiche-2022/project/project.xpr
+update_compile_order -fileset sources_1
+launch_runs synth_1 -jobs 6
+wait_on_run synth_1
+open_run synth_1 -name synth_1
+launch_simulation
+source project_reti_logiche.tcl
+file mkdir /home/alberton/Desktop/reti-logiche-2022/project/project.srcs/sim_1/new
+set_property SOURCE_SET sources_1 [get_filesets sim_1]
+close [ open /home/alberton/Desktop/reti-logiche-2022/project/project.srcs/sim_1/new/tb_example.vhd w ]
+add_files -fileset sim_1 /home/alberton/Desktop/reti-logiche-2022/project/project.srcs/sim_1/new/tb_example.vhd
+update_compile_order -fileset sim_1
+update_compile_order -fileset sim_1
+launch_simulation
+source project_tb.tcl
+close_sim
+launch_simulation
+source project_tb.tcl
+close_sim
+close_sim
