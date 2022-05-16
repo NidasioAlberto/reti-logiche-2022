@@ -30,6 +30,7 @@ architecture priject_arch of project_reti_logiche is
     signal next_state      : state_type                    := IDLE;
     signal W               : integer range 0 to 255        := 0;
     signal current_U_count : integer range 0 to 255        := 0;
+    signal next_U_count    : integer range 0 to 255        := 0;
     signal conv_state      : std_logic_vector(9 downto 0)  := "0000000000";
     signal next_conv_state : std_logic_vector(9 downto 0)  := "0000000000";
     signal Z               : std_logic_vector(15 downto 0) := "0000000000000000";
@@ -44,9 +45,10 @@ begin
             current_state <= IDLE;
         elsif falling_edge(i_clk) then
             -- Advance to the next state at the clock's rising edge
-            current_state <= next_state;
-            conv_state    <= next_conv_state;
-            Z             <= next_Z;
+            current_state   <= next_state;
+            current_U_count <= next_U_count;
+            conv_state      <= next_conv_state;
+            Z               <= next_Z;
         end if;
     end process;
 
@@ -65,9 +67,9 @@ begin
                 if (i_start = '1') then
                     next_state <= REQUEST_W;
                 else
-                    W               <= 0;
-                    current_U_count <= 0;
-                    next_state      <= IDLE;
+                    W            <= 0;
+                    next_U_count <= 0;
+                    next_state   <= IDLE;
                 end if;
             when REQUEST_W =>
                 -- Request the first address in memory where W is located
@@ -123,13 +125,19 @@ begin
                     next_state <= DONE;
                 else
                     -- Otherwise update the current_U_count and continue
-                    current_U_count <= current_U_count + 1;
-                    next_state      <= REQUEST_U;
+                    next_U_count <= current_U_count + 1;
+                    next_state   <= REQUEST_U;
                 end if;
             when DONE =>
                 if (i_start = '0') then
                     -- If the start signal goes back to 0, reset the done signal
                     o_done <= '0';
+
+                    -- Reset internal state
+                    next_conv_state <= "0000000000";
+
+                    -- Go back to IDLE
+                    next_state <= IDLE;
                 end if;
         end case;
     end process;
