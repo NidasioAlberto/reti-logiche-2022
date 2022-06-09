@@ -2,7 +2,8 @@
 
 Lo scopo del progetto è quello di implementare un modulo hardware, descritto in VHDL, che applichi il codice convoluzionale $\frac{1}{2}$ ad un flusso di bit salvato in memoria. Il flusso di bit generato dovrà essere a sua volta memorizzato.
 
-\subsection{Codice convoluzionale $\frac{1}{2}$}
+\subsection{Codice convoluzionale \texorpdfstring{$\frac{1}{2}$}{}}
+\label{section:convolutore}
 
 Un codice convoluzionale è un tipo di codifica nel quale l'informazione, composta da \textit{m} bit, viene trasformata in un flusso di \textit{n} bit, dove \textit{m/n} è il rapporto del codice o tasso di trasmissione.\footcite{codiceconvoluzionale}
 
@@ -53,7 +54,7 @@ Nel caso in esame, il codice convoluzionale ha un rapporto $\frac{1}{2}$, quindi
     \label{fig:codificatore}
 \end{figure}
 
-Considerando il flusso $U$ di bit in ingresso e indicando con $U_k$ il bit arrivato nell'istante $k$, la codifica produce due bit, $P_{1k}$ e $P_{2k}$, calcolati come mostrato in eq. \ref{eq:p1k} e \ref{eq:p2k}. È importate sottolineare che per produrre i bit P viene applicato l'operatore XOR ($\oplus$) così da ottenere una somma senza riporto.
+Considerando il flusso $U$ di bit in ingresso e indicando con $k$ l'instante di tempo considerato, la codifica legge il bit $U_k$ e produce i bit $P_{1k}$ e $P_{2k}$ calcolati come mostrato in eq. \ref{eq:p1k} e \ref{eq:p2k}. È importate sottolineare che per produrre i bit P viene applicato l'operatore XOR ($\oplus$) così da ottenere una somma senza riporto.
 
 \begin{equation}
     P_{1k} = U_k \oplus U_{k-2}
@@ -97,24 +98,23 @@ In figura \ref{table:esempio8bit} è riportato un esempio in cui vengono codific
 
 Il modulo da implementare deve leggere il flusso $U$ da una memoria con indirizzamento al byte. All'indirizzo $0$ è presente la quantità di parole $W$ da codificare e, a partire dall'indirizzo $1$, i byte $U_k$. La dimensione massima della sequenza di ingesso è di $255$ byte. Il flusso in uscita dovrà essere memorizzato a partire dall'indirizzo $1000$.
 
-Di seguito, in figura \ref{table:memoria} è rappresentato il contenuto della memoria.
+In figura \ref{table:memoria} è rappresentato il contenuto della memoria.
 
 \begin{figure}[!ht]
     \centering
     \begin{tabular}{c | c}
-        Indirizzo          & Contenuto    \\
+        Indirizzo      & Contenuto       \\
         \hline
-        $0$                & $W$          \\
-        $1$                & $U_0$        \\
-        $2$                & $U_1$        \\
-        ...                & ...          \\
-        $W$                & $U_{W-1}$    \\
-        ...                & ...          \\
-        $1000$             & $P_{10}$     \\
-        $1001$             & $P_{20}$     \\
-        ...                & ...          \\
-        $1000 + (W-1) * 2$ & $P_{1(W-1)}$ \\
-        $1001 + (W-1) * 2$ & $P_{2(W-1)}$ \\
+        $0$            & $W$             \\
+        $1$            & $U_0$           \\
+        $2$            & $U_1$           \\
+        ...            & ...             \\
+        $W$            & $U_{W-1}$       \\
+        ...            & ...             \\
+        $1000$         & $P_{0}$         \\
+        $1001$         & $P_{1}$         \\
+        ...            & ...             \\
+        $1001+2*(W-1)$ & $P_{2*(W-1)-1}$ \\
     \end{tabular}
     \caption{Contenuto della memoria}
     \label{table:memoria}
@@ -137,21 +137,27 @@ Inoltre il segnale \verb|i_start| rimarrà alto finché \verb|o_done| rimane bas
     \centering
     \begin{varwidth}{\linewidth}
         \begin{verbatim}
-    entity project_reti_logiche is
-    port (
-        i_clk     : in std_logic;
-        i_rst     : in std_logic;
-        i_start   : in std_logic;
-        i_data    : in std_logic_vector(7 downto 0);
-        o_address : out std_logic_vector(15 downto 0);
-        o_done    : out std_logic;
-        o_en      : out std_logic;
-        o_we      : out std_logic;
-        o_data    : out std_logic_vector(7 downto 0)
-    );
-    end project_reti_logiche;
+entity project_reti_logiche is
+port (
+    i_clk     : in std_logic;
+    i_rst     : in std_logic;
+    i_start   : in std_logic;
+    i_data    : in std_logic_vector(7 downto 0);
+    o_address : out std_logic_vector(15 downto 0);
+    o_done    : out std_logic;
+    o_en      : out std_logic;
+    o_we      : out std_logic;
+    o_data    : out std_logic_vector(7 downto 0)
+);
+end project_reti_logiche;
     \end{verbatim}
     \end{varwidth}
     \caption{Interfaccia del modulo}
     \label{code:interfacciacomponente}
 \end{figure}
+
+L'interfaccia del componente che deve essere implementata è mostrata in figura \ref{code:interfacciacomponente}. In particolare la comunicazione con la memoria avviene tramite i segnali \verb|i_data|, \verb|o_address|, \verb|o_en|, \verb|o_we| e \verb|o_data|.
+
+Per comunicare con la memoria è necessario abilitarla portando a 1 il segnale \verb|o_en|, mentre \verb|o_we| indica la modalità di scrittura, se alto, o la modalità di lettura, se basso.
+
+La memoria, durante il primo rising edge in cui è abilitata, legge o scrive il byte all'indirizzo indicato con \verb|o_address| e riporta il valore sul segnale \verb|o_data|.

@@ -76,3 +76,7 @@ xvlog.*
 *.big
 *.bbl
 *.toc
+*.out
+
+# Mac OS
+.DS_Store

@@ -25,7 +25,7 @@ entity project_reti_logiche is
 end project_reti_logiche;
 
 architecture priject_arch of project_reti_logiche is
-    type state_type is (IDLE, REQUEST_W, FETCH_W, REQUEST_U, FETCH_U, COMPUTE_U, WRITE_Z1, WRITE_Z2, DONE);
+    type state_type is (IDLE, REQUEST_W, FETCH_W, REQUEST_U, FETCH_U, COMPUTE_P, WRITE_P1, WRITE_P2, DONE);
     signal current_state   : state_type                    := IDLE;
     signal next_state      : state_type                    := IDLE;
     signal W               : integer range 0 to 255        := 0;
@@ -34,7 +34,7 @@ architecture priject_arch of project_reti_logiche is
     signal conv_state      : std_logic_vector(9 downto 0)  := "0000000000";
     signal next_conv_state : std_logic_vector(9 downto 0)  := "0000000000";
     signal Z               : std_logic_vector(15 downto 0) := "0000000000000000";
-    signal next_Z          : std_logic_vector(15 downto 0) := "0000000000000000";
+    signal next_P          : std_logic_vector(15 downto 0) := "0000000000000000";
 begin
     -- Handle reset and clock inputs and updates the state
     process (i_rst, i_clk)
@@ -48,7 +48,7 @@ begin
             current_state   <= next_state;
             current_U_count <= next_U_count;
             conv_state      <= next_conv_state;
-            Z               <= next_Z;
+            Z               <= next_P;
         end if;
     end process;
 
@@ -92,18 +92,18 @@ begin
                 -- Shift the current value and append U from memory
                 next_conv_state <= conv_state(1 downto 0) & i_data;
 
-                next_state <= COMPUTE_U;
-            when COMPUTE_U =>
+                next_state <= COMPUTE_P;
+            when COMPUTE_P =>
                 -- Run the 1/2 convolutional code
                 for k in 7 downto 0 loop
                     -- Compute P1k and P2k
-                    next_Z(k * 2 + 1) <= conv_state(k + 2) xor conv_state(k);
-                    next_Z(k * 2)     <= conv_state(k + 2) xor (conv_state(k + 1) xor conv_state(k));
+                    next_P(k * 2 + 1) <= conv_state(k + 2) xor conv_state(k);
+                    next_P(k * 2)     <= conv_state(k + 2) xor conv_state(k + 1) xor conv_state(k);
                 end loop;
 
                 -- Next we need to write P1 and P2
-                next_state <= WRITE_Z1;
-            when WRITE_Z1 =>
+                next_state <= WRITE_P1;
+            when WRITE_P1 =>
                 -- Write P1
                 o_address <= std_logic_vector(to_unsigned(1000 + current_U_count * 2, o_address'length));
                 o_data    <= Z(15 downto 8);
@@ -111,8 +111,8 @@ begin
                 o_en      <= '1';
 
                 -- Next write P2
-                next_state <= WRITE_Z2;
-            when WRITE_Z2 =>
+                next_state <= WRITE_P2;
+            when WRITE_P2 =>
                 -- Write P2
                 o_address <= std_logic_vector(to_unsigned(1000 + current_U_count * 2 + 1, o_address'length));
                 o_data    <= Z(7 downto 0);

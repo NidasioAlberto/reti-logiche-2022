@@ -1,11 +1,23 @@
 {
     "cSpell.words": [
         "addnode",
+        "compp",
+        "compu",
+        "compz",
+        "conv",
+        "convolutional",
         "convolutore",
         "convoluzionale",
         "downto",
+        "fetchu",
+        "fetchw",
         "Nidasio",
-        "VHDL"
+        "requ",
+        "reqw",
+        "statenode",
+        "VHDL",
+        "writep",
+        "writez"
     ],
     "cSpell.language": "en,it"
 }
