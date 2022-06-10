@@ -54,7 +54,7 @@ Nel caso in esame, il codice convoluzionale ha un rapporto $\frac{1}{2}$, quindi
     \label{fig:codificatore}
 \end{figure}
 
-Considerando il flusso $U$ di bit in ingresso e indicando con $k$ l'instante di tempo considerato, la codifica legge il bit $U_k$ e produce i bit $P_{1k}$ e $P_{2k}$ calcolati come mostrato in eq. \ref{eq:p1k} e \ref{eq:p2k}. È importate sottolineare che per produrre i bit P viene applicato l'operatore XOR ($\oplus$) così da ottenere una somma senza riporto.
+Considerando il flusso $U$ di bit in ingresso e indicando con $k$ l'instante di tempo considerato, la codifica legge il bit $U_k$ e produce i bit $P_{1k}$ e $P_{2k}$ calcolati come mostrato in eq. \ref{eq:p1k} e \ref{eq:p2k}. È importate sottolineare che il convolutore mantiene in memoria, ad ogni istante di tempo, gli ultimi due bit precedentemente letti, ovvero $U_{k-1}$ e $U_{k-2}$. Inoltre, per produrre i bit di $P$, viene applicato l'operatore XOR ($\oplus$) in modo tale da ottenere una somma senza riporto.
 
 \begin{equation}
     P_{1k} = U_k \oplus U_{k-2}
@@ -120,7 +120,7 @@ In figura \ref{table:memoria} è rappresentato il contenuto della memoria.
     \label{table:memoria}
 \end{figure}
 
-\subsection{Specifiche del componente}
+\subsection{Specifiche di funzionamento}
 
 Il componente da descrivere in VHDL deve implementare l'interfaccia indicata in figura \ref{code:interfacciacomponente} e rispettare le seguenti caratteristiche:
 
@@ -156,8 +156,4 @@ end project_reti_logiche;
     \label{code:interfacciacomponente}
 \end{figure}
 
-L'interfaccia del componente che deve essere implementata è mostrata in figura \ref{code:interfacciacomponente}. In particolare la comunicazione con la memoria avviene tramite i segnali \verb|i_data|, \verb|o_address|, \verb|o_en|, \verb|o_we| e \verb|o_data|.
-
-Per comunicare con la memoria è necessario abilitarla portando a 1 il segnale \verb|o_en|, mentre \verb|o_we| indica la modalità di scrittura, se alto, o la modalità di lettura, se basso.
-
-La memoria, durante il primo rising edge in cui è abilitata, legge o scrive il byte all'indirizzo indicato con \verb|o_address| e riporta il valore sul segnale \verb|o_data|.
+La memoria è collegata al modulo tramite i segnali \verb|i_data|, \verb|o_address|, \verb|o_en|, \verb|o_we| e \verb|o_data|. Per comunicare con essa è necessario abilitarla portando a 1 il segnale \verb|o_en|, mentre \verb|o_we| indica la modalità di scrittura, se alto, o la modalità di lettura, se basso. La memoria, durante il primo rising edge in cui è abilitata, legge o scrive il byte all'indirizzo indicato con \verb|o_address| e riporta il valore sul segnale \verb|o_data|.
