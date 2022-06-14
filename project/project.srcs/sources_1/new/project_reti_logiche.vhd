@@ -39,7 +39,7 @@ begin
     -- Handle reset and clock inputs and updates the state
     process (i_rst, i_clk)
     begin
-        if (i_rst = '1') then
+        if rising_edge(i_rst) then
             -- Reset the state whenever the reset signal is up
             U_buffer      <= "0000000000";
             current_state <= IDLE;
