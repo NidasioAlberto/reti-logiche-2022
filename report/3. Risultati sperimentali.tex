@@ -1,0 +1,69 @@
+\subsection{Sintesi}
+
+Il dispositivo progettato è perfettamente sintetizzabile ed occupa le risorse mostrate in tabella \ref{table:risorse}.
+
+\begin{figure}[!ht]
+    \centering
+    \begin{tabular}{|c | c |}
+        \hline
+        Resource & Estimation \\
+        \hline
+        LUT      &            \\
+        \hline
+        FF       &            \\
+        \hline
+        DSP      &            \\
+        \hline
+        IO       &            \\
+        \hline
+        BUFG     &            \\
+        \hline
+    \end{tabular}
+    \caption{Risorse hardware impiegate}
+    \label{table:risorse}
+\end{figure}
+
+Analizzando il timing report mostrato in tabella \ref{table:timingreport} è possibile verificare che il tempo di esecuzione del componente rispetta il limite di $100ns$ per il periodo di clock.
+
+\begin{figure}[!ht]
+    \centering
+    \begin{tabular}{|c|c|c|c|c|c|}
+        \hline
+        \multicolumn{2}{|c|}{Setup}               \\
+        \hline
+        Worst negative slack (WNS)              & \\
+        \hline
+        Total negative slack (TNS)              & \\
+        \hline
+        Number of failing endpoints             & \\
+        \hline
+        Total number of endpoints               & \\
+        \hline
+        \multicolumn{2}{|c|}{Hold}                \\
+        \hline
+        Worst hold slack (WHS)                  & \\
+        \hline
+        Total hold slack (THS)                  & \\
+        \hline
+        Number of failing endpoints             & \\
+        \hline
+        Total number of endpoints               & \\
+        \hline
+        \multicolumn{2}{|c|}{Pulse width}         \\
+        \hline
+        Worst pulse width slack (WPWS)          & \\
+        \hline
+        Total pulse width negative slack (TPWS) & \\
+        \hline
+        Number of failing endpoints             & \\
+        \hline
+        Total number of endpoints               & \\
+        \hline
+    \end{tabular}
+    \caption{Timing report}
+    \label{table:timingreport}
+\end{figure}
+
+\subsection{Simulazioni}
+
+Tutti i test bench forniti sono andati a buon fine sia in \verb|Behavioral Simulation|, \verb|Post Synthesis Functional Simulation| e \verb|Post Synthesis Timing Simulation|
