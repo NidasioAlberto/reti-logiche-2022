@@ -26,9 +26,11 @@ end project_reti_logiche;
 
 architecture project_arch of project_reti_logiche is
     type state_type is (IDLE, REQUEST_W, FETCH_W, REQUEST_U, FETCH_U, COMPUTE_P, WRITE_P1, WRITE_P2, DONE);
+    signal o_done_next   : std_logic;
     signal current_state : state_type                    := IDLE;
     signal next_state    : state_type                    := IDLE;
     signal W             : integer range 0 to 255        := 0;
+    signal next_W        : integer range 0 to 255        := 0;
     signal U_count       : integer range 0 to 255        := 0;
     signal next_U_count  : integer range 0 to 255        := 0;
     signal U_buffer      : std_logic_vector(9 downto 0)  := "0000000000";
@@ -39,13 +41,19 @@ begin
     -- Handle reset and clock inputs and updates the state
     process (i_rst, i_clk)
     begin
-        if rising_edge(i_rst) then
+        if i_rst = '1' then
             -- Reset the state whenever the reset signal is up
-            U_buffer      <= "0000000000";
+            o_done        <= '0';
             current_state <= IDLE;
-        elsif falling_edge(i_clk) then
+            W             <= 0;
+            U_count       <= 0;
+            U_buffer      <= "0000000000";
+            P_buffer      <= "0000000000000000";
+        elsif rising_edge(i_clk) then
             -- Advance to the next state at the clock's rising edge
+            o_done        <= o_done_next;
             current_state <= next_state;
+            W             <= next_W;
             U_count       <= next_U_count;
             U_buffer      <= next_U_buffer;
             P_buffer      <= next_P_buffer;
@@ -56,18 +64,24 @@ begin
     process (current_state, i_start)
     begin
         -- Default outputs
-        o_address <= "0000000000000000";
-        o_done    <= '0';
-        o_en      <= '0';
-        o_we      <= '0';
-        o_data    <= "00000000";
+        o_address   <= "0000000000000000";
+        o_done_next <= '0';
+        o_en        <= '0';
+        o_we        <= '0';
+        o_data      <= "00000000";
+
+        next_state    <= current_state;
+        next_W        <= W;
+        next_U_count  <= U_count;
+        next_U_buffer <= U_buffer;
+        next_P_buffer <= P_buffer;
 
         case current_state is
             when IDLE =>
                 if (i_start = '1') then
                     next_state <= REQUEST_W;
                 else
-                    W            <= 0;
+                    next_W       <= 0;
                     next_U_count <= 0;
                     next_state   <= IDLE;
                 end if;
@@ -79,9 +93,15 @@ begin
                 next_state <= FETCH_W;
             when FETCH_W =>
                 -- Read W from the memory data bus
-                W <= CONV_INTEGER(i_data);
+                next_W <= CONV_INTEGER(i_data);
 
-                next_state <= REQUEST_U;
+                if CONV_INTEGER(i_data) = 0 then
+                    -- If the input stream is empty
+                    o_done_next <= '1';
+                    next_state  <= DONE;
+                else
+                    next_state <= REQUEST_U;
+                end if;
             when REQUEST_U =>
                 -- Request the current U byte address
                 o_address <= std_logic_vector(to_unsigned(U_count + 1, o_address'length));
@@ -121,8 +141,8 @@ begin
 
                 if (U_count = W - 1) then
                     -- If all U bytes have been read stop here
-                    o_done     <= '1';
-                    next_state <= DONE;
+                    o_done_next <= '1';
+                    next_state  <= DONE;
                 else
                     -- Otherwise update the U_count and continue
                     next_U_count <= U_count + 1;
@@ -131,7 +151,7 @@ begin
             when DONE =>
                 if (i_start = '0') then
                     -- If the start signal goes back to 0, reset the done signal
-                    o_done <= '0';
+                    o_done_next <= '0';
 
                     -- Reset internal state
                     next_U_buffer <= "0000000000";

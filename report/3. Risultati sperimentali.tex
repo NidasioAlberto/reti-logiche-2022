@@ -1,63 +1,61 @@
 \subsection{Sintesi}
 
-Il dispositivo progettato è perfettamente sintetizzabile ed occupa le risorse mostrate in tabella \ref{table:risorse}.
+Il dispositivo progettato è perfettamente sintetizzabile ed occupa le risorse mostrate in figura \ref{table:risorse}.
 
 \begin{figure}[!ht]
     \centering
     \begin{tabular}{|c | c |}
         \hline
-        Resource & Estimation \\
+        Resource & Utilization \\
         \hline
-        LUT      &            \\
+        LUT      & $63$        \\
         \hline
-        FF       &            \\
+        FF       & $47$        \\
         \hline
-        DSP      &            \\
+        IO       & $38$        \\
         \hline
-        IO       &            \\
-        \hline
-        BUFG     &            \\
+        BUFG     & $1$         \\
         \hline
     \end{tabular}
-    \caption{Risorse hardware impiegate}
+    \caption{Risorse hardware post implementazione}
     \label{table:risorse}
 \end{figure}
 
-Analizzando il timing report mostrato in tabella \ref{table:timingreport} è possibile verificare che il tempo di esecuzione del componente rispetta il limite di $100ns$ per il periodo di clock.
+Analizzando il timing report mostrato in figura \ref{table:timingreport} è possibile vedere che il tempo di esecuzione del componente rispetta il limite di $100ns$ per il periodo di clock.
 
 \begin{figure}[!ht]
     \centering
     \begin{tabular}{|c|c|c|c|c|c|}
         \hline
-        \multicolumn{2}{|c|}{Setup}               \\
+        \multicolumn{2}{|c|}{Setup}                          \\
         \hline
-        Worst negative slack (WNS)              & \\
+        Worst negative slack (WNS)              & $94.306ns$ \\
         \hline
-        Total negative slack (TNS)              & \\
+        Total negative slack (TNS)              & $0.00ns$   \\
         \hline
-        Number of failing endpoints             & \\
+        Number of failing endpoints             & $0$        \\
         \hline
-        Total number of endpoints               & \\
+        Total number of endpoints               & $92$       \\
         \hline
-        \multicolumn{2}{|c|}{Hold}                \\
+        \multicolumn{2}{|c|}{Hold}                           \\
         \hline
-        Worst hold slack (WHS)                  & \\
+        Worst hold slack (WHS)                  & $0.247ns$  \\
         \hline
-        Total hold slack (THS)                  & \\
+        Total hold slack (THS)                  & $0.000ns$  \\
         \hline
-        Number of failing endpoints             & \\
+        Number of failing endpoints             & $0$        \\
         \hline
-        Total number of endpoints               & \\
+        Total number of endpoints               & $92$       \\
         \hline
-        \multicolumn{2}{|c|}{Pulse width}         \\
+        \multicolumn{2}{|c|}{Pulse width}                    \\
         \hline
-        Worst pulse width slack (WPWS)          & \\
+        Worst pulse width slack (WPWS)          & $49.500ns$ \\
         \hline
-        Total pulse width negative slack (TPWS) & \\
+        Total pulse width negative slack (TPWS) & $0.000$    \\
         \hline
-        Number of failing endpoints             & \\
+        Number of failing endpoints             & $0$        \\
         \hline
-        Total number of endpoints               & \\
+        Total number of endpoints               & $47$       \\
         \hline
     \end{tabular}
     \caption{Timing report}
@@ -66,4 +64,6 @@ Analizzando il timing report mostrato in tabella \ref{table:timingreport} è pos
 
 \subsection{Simulazioni}
 
-Tutti i test bench forniti sono andati a buon fine sia in \verb|Behavioral Simulation|, \verb|Post Synthesis Functional Simulation| e \verb|Post Synthesis Timing Simulation|
+Lo sviluppo del dispositivo in codice VHDL è stato validato tramite i test bench forniti per il progetto. Tali test coprono diversi casi particolari come i casi limite di minima e massima lunghezza del flusso $U$, reset multipli ed elaborazioni successive di diverse sequenze. Oltre a questi, sono stati eseguiti anche diversi test bench generati casualmente tramite uno script il quale prepara diversi flussi $U$, ciascun test bench provato in questa maniera conteneva 1000 flussi differenti che il dispositivo doveva elaborare.
+
+Tutti i test provati sul componente sono andati a buon fine sia in Behavioral, Post Synthesis e Post Implementation Simulation.

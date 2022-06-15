@@ -36,7 +36,7 @@ ARCHITECTURE projecttb OF project_tb IS
             i_rst : IN STD_LOGIC;
             i_start : IN STD_LOGIC;
             i_data : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
-            so_address : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+            o_address : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
             o_done : OUT STD_LOGIC;
             o_en : OUT STD_LOGIC;
             o_we : OUT STD_LOGIC;
