@@ -25,7 +25,7 @@ entity project_reti_logiche is
 end project_reti_logiche;
 
 architecture project_arch of project_reti_logiche is
-    type state_type is (IDLE, REQUEST_W, FETCH_W, REQUEST_U, FETCH_U, COMPUTE_P, WRITE_P1, WRITE_P2, DONE);
+    type state_type is (IDLE, REQUEST_W, WAIT_W, FETCH_W, REQUEST_U, WAIT_U, COMPUTE_P, WRITE_P1, WRITE_P2, DONE);
     signal o_done_next   : std_logic;
     signal current_state : state_type                    := IDLE;
     signal next_state    : state_type                    := IDLE;
@@ -33,8 +33,8 @@ architecture project_arch of project_reti_logiche is
     signal next_W        : integer range 0 to 255        := 0;
     signal U_count       : integer range 0 to 255        := 0;
     signal next_U_count  : integer range 0 to 255        := 0;
-    signal U_buffer      : std_logic_vector(9 downto 0)  := "0000000000";
-    signal next_U_buffer : std_logic_vector(9 downto 0)  := "0000000000";
+    signal U_buffer      : std_logic_vector(1 downto 0)  := "00";
+    signal next_U_buffer : std_logic_vector(1 downto 0)  := "00";
     signal P_buffer      : std_logic_vector(15 downto 0) := "0000000000000000";
     signal next_P_buffer : std_logic_vector(15 downto 0) := "0000000000000000";
 begin
@@ -47,7 +47,7 @@ begin
             current_state <= IDLE;
             W             <= 0;
             U_count       <= 0;
-            U_buffer      <= "0000000000";
+            U_buffer      <= "00";
             P_buffer      <= "0000000000000000";
         elsif rising_edge(i_clk) then
             -- Advance to the next state at the clock's rising edge
@@ -62,6 +62,7 @@ begin
 
     -- Finite state machine
     process (current_state, i_start)
+        variable current_U : std_logic_vector(9 downto 0) := "0000000000";
     begin
         -- Default outputs
         o_address   <= "0000000000000000";
@@ -90,6 +91,8 @@ begin
                 o_address <= std_logic_vector(to_unsigned(0, o_address'length));
                 o_en      <= '1';
 
+                next_state <= WAIT_W;
+            when WAIT_W =>
                 next_state <= FETCH_W;
             when FETCH_W =>
                 -- Read W from the memory data bus
@@ -107,18 +110,19 @@ begin
                 o_address <= std_logic_vector(to_unsigned(U_count + 1, o_address'length));
                 o_en      <= '1';
 
-                next_state <= FETCH_U;
-            when FETCH_U =>
-                -- Shift the current value and append U from memory
-                next_U_buffer <= U_buffer(1 downto 0) & i_data;
-
+                next_state <= WAIT_U;
+            when WAIT_U =>
                 next_state <= COMPUTE_P;
             when COMPUTE_P =>
+                -- Shift the current value and append U from memory
+                next_U_buffer <= i_data(1 downto 0);
+                current_U := U_buffer(1 downto 0) & i_data;
+
                 -- Compute the 1/2 convolutional code
                 for k in 7 downto 0 loop
                     -- Compute P1k and P2k
-                    next_P_buffer(k * 2 + 1) <= U_buffer(k + 2) xor U_buffer(k);
-                    next_P_buffer(k * 2)     <= U_buffer(k + 2) xor U_buffer(k + 1) xor U_buffer(k);
+                    next_P_buffer(k * 2 + 1) <= current_U(k + 2) xor current_U(k);
+                    next_P_buffer(k * 2)     <= current_U(k + 2) xor current_U(k + 1) xor current_U(k);
                 end loop;
 
                 -- Next we need to write P1 and P2
@@ -154,7 +158,7 @@ begin
                     o_done_next <= '0';
 
                     -- Reset internal state
-                    next_U_buffer <= "0000000000";
+                    next_U_buffer <= "00";
 
                     -- Go back to IDLE
                     next_state <= IDLE;
