@@ -61,9 +61,6 @@ xvlog.*
 *.backup.*
 *.debug
 
-## checkpoint files
-*.dcp
-
 ## Latex
 *.gz
 *.log

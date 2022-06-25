@@ -158,7 +158,10 @@ begin
                     o_done_next <= '0';
 
                     -- Reset internal state
+                    next_w        <= 0;
+                    next_U_count  <= 0;
                     next_U_buffer <= "00";
+                    next_P_buffer <= "0000000000000000";
 
                     -- Go back to IDLE
                     next_state <= IDLE;
