@@ -20,7 +20,7 @@ Nel caso in esame, il codice convoluzionale ha un rapporto $\frac{1}{2}$, quindi
         \node(add1) at (1.5, 1.75) [addnode] {\textbf{+}};
         \node(add2) at (1.5, -1.75) [addnode] {\textbf{+}};
 
-        \draw[->] (-2, 0) -- (ff1.west);
+        \draw[->] (-2.5, 0) -- (ff1.west);
         \draw[->] (ff1.east) -- (ff2.west);
         \draw[-] (ff2.east) -- (4.5, 0);
 
@@ -43,7 +43,7 @@ Nel caso in esame, il codice convoluzionale ha un rapporto $\frac{1}{2}$, quindi
 
         \draw [decorate, decoration = {brace}] (5.75, 2.5) -- (5.75, -2.5);
 
-        \node at (-1.75, 0.25) {$U_k$};
+        \node at (-2.25, 0.25) {$U_k$};
         \node at (1.5, 0.25) {$U_{k-1}$};
         \node at (5, 0.25) {$U_{k-2}$};
         \node at (4, 2.25) {$P_{1k}$};
@@ -133,8 +133,6 @@ Il componente da descrivere in VHDL deve implementare l'interfaccia indicata in 
 
 Inoltre il segnale \verb|i_start| rimarrà alto finché \verb|o_done| rimane basso e il segnale \verb|i_rst| verrà inviato solamente una volta, successive elaborazione dovranno ripartire solamente con \verb|i_start|.
 
-La memoria è collegata al modulo tramite i segnali \verb|i_data|, \verb|o_address|, \verb|o_en|, \verb|o_we| e \verb|o_data|. Per comunicare con essa è necessario abilitarla portando a 1 il segnale \verb|o_en|, mentre \verb|o_we| indica la modalità di scrittura, se alto, o la modalità di lettura, se basso. Se abilitata, la memoria si attiva sul rising edge del clock e, nel caso sia impostata la modalità di scrittura, riporta il valore all'indirizzo \verb|o_address| sul segnale \verb|o_data|, altrimenti, se i modalità di scrittura, memorizza nell'indirizzo specificato il valore riportato dal segnale \verb|i_data|.
-
 \begin{figure}[!ht]
     \centering
     \begin{varwidth}{\linewidth}
@@ -157,3 +155,7 @@ end project_reti_logiche;
     \caption{Interfaccia del modulo}
     \label{code:interfacciacomponente}
 \end{figure}
+
+La memoria è collegata al modulo tramite i segnali \verb|i_data|, \verb|o_address|, \verb|o_en|, \verb|o_we| e \verb|o_data|. Per comunicare con essa è necessario abilitarla portando a 1 il segnale \verb|o_en|, mentre \verb|o_we| indica la modalità di scrittura, se alto, o la modalità di lettura, se basso. Se abilitata, la memoria si attiva sul rising edge del clock. Nel caso sia impostata la modalità di scrittura, essa riporta il valore memorizzato all'indirizzo \verb|o_address| sul segnale \verb|i_data| con un determinato ritardo di tempo. Altrimenti, se in modalità di scrittura, memorizza nell'indirizzo specificato il valore riportato dal segnale \verb|o_data|.
+
+Durante un'operazione di lettura è importante attendere che la memoria abbia avuto sufficiente tempo per riportare sul segnale \verb|i_data| il valore richiesto. A tal proposito è ragionevole assumere che il ritardo che caratterizza l'operazione non sia più grande del periodo di clock. Quindi, per progettare un componente conviene attendere un ciclo di clock prima di leggere il risultato, invece che campionarlo subito dopo aver abilitato la memoria. All'interno di una macchina a stati questo si traduce in uno stato di attesa interposto tra l'invio del comando e la sua lettura.

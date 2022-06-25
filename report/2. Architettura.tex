@@ -2,39 +2,41 @@ Il componente è organizzato tramite una macchina a stati che scandisce gli acce
 
 \subsection{Macchina a stati}
 
-La macchina a stati sintetizzata, mostrata in figura \ref{fig:statemachine}, è composta da i seguenti 9 stati:
+La macchina a stati sintetizzata, mostrata in figura \ref{fig:statemachine}, è composta da i seguenti 10 stati:
 
 \begin{itemize}
     \item \textbf{IDLE}: La macchina è in attesa del segnale \verb|i_start| e rimane in questo stato finché il segnale non viene portato a $1$;
-    \item \textbf{REQUEST\_W} e \textbf{FETCH\_W}: Viene attivata la memoria indicando l'indirizzo di lettura $0$ di $W$. L'output viene quindi letto da \verb|i_data| e memorizzato, sarà poi utilizzato per contare i cicli di computazione. Nel caso $W$ fosse pari a $0$, il modulo passa subito nello stato \textbf{DONE} portando a $1$ il segnale \verb|o_done|, altrimenti continua;
-    \item \textbf{REQUEST\_U} e \textbf{FETCH\_U}: Viene utilizzata la memoria ancora in modalità lettura per recuperare un byte del flusso $U$, come indirizzo viene utilizzato il numero del ciclo corrente;
-    \item \textbf{COMPUTE\_P}: In questa fase vengono calcolati due byte del flusso in uscita a partire dal byte precedentemente letto, vedi sezione \ref{section:calcolodiz};
+    \item \textbf{REQUEST\_W}, \textbf{WAIT\_W} e \textbf{FETCH\_W}: Viene attivata la memoria indicando l'indirizzo di lettura $0$ di $W$. Si attende che la cella di memoria venga letta. Quindi l'output viene in \verb|i_data| viene memorizzato, sarà poi utilizzato per contare i cicli di computazione. Nel caso $W$ fosse pari a $0$, il modulo passa subito nello stato \textbf{DONE} portando a $1$ il segnale \verb|o_done|, altrimenti continua;
+    \item \textbf{REQUEST\_U} e \textbf{WAIT\_U}: Viene utilizzata la memoria ancora in modalità lettura per recuperare un byte del flusso $U$, come indirizzo viene utilizzato il numero del ciclo corrente;
+    \item \textbf{COMPUTE\_P}: In questa fase viene letto il byte $U$ e vengono calcolati due byte del flusso in uscita, vedi sezione \ref{section:calcolodiz};
     \item \textbf{WRITE\_P1} e \textbf{WRITE\_P2}: Vengono scritti in memoria i due byte del flusso $Z$ calcolati precedentemente. Se sono stati elaborati tutti i $W$ byte del flusso $U$, la macchina passa nello stato \textbf{DONE} portando a $1$ il segnale \verb|o_done|, altrimenti continua ripartendo da \textbf{REQUEST\_U};
     \item \textbf{DONE}: La computazione è terminata e viene atteso il reset del segnale \verb|i_start| per riportare a zero \verb|o_done| e tornare nello stato di \textbf{IDLE}.
 \end{itemize}
 
-\tikzstyle{statenode} = [state, minimum size=13mm, text width=11mm, align=center]
+\tikzstyle{statenode} = [state, minimum size=14mm, text width=11mm, align=center]
 
 \begin{figure}[!ht]
     \centering
     \begin{tikzpicture}
-        \node(idle)    at (3 * 360/10 + 360/20:4) [statenode, initial]   {\textbf{idle}};
-        \node(reqw)    at (1 * 360/10 + 360/20:4) [statenode]            {\textbf{req. $W$}};
-        \node(fetchw)  at (0 * 360/10 + 360/20:4) [statenode]            {\textbf{fetch $W$}};
-        \node(requ)    at (9 * 360/10 + 360/20:4) [statenode]            {\textbf{req. $U_k$}};
-        \node(fetchu)  at (8 * 360/10 + 360/20:4) [statenode]            {\textbf{fetch $U_k$}};
-        \node(compp)   at (7 * 360/10 + 360/20:4) [statenode]            {\textbf{comp. $P_k$}};
-        \node(writep1) at (6 * 360/10 + 360/20:4) [statenode]            {\textbf{write $P_{1k}$}};
-        \node(writep2) at (5 * 360/10 + 360/20:4) [statenode]            {\textbf{write $P_{2k}$}};
-        \node(done)    at (4 * 360/10 + 360/20:4) [statenode, accepting] {\textbf{done}};
+        \node(idle)    at (3  * 360/12 + 360/12:4) [statenode, initial]   {\textbf{idle}};
+        \node(reqw)    at (1  * 360/12 + 360/12:4) [statenode]            {\textbf{req. $W$}};
+        \node(waitw)   at (0  * 360/12 + 360/12:4) [statenode]            {\textbf{wait $W$}};
+        \node(fetchw)  at (11 * 360/12 + 360/12:4) [statenode]            {\textbf{fetch $W$}};
+        \node(requ)    at (10 * 360/12 + 360/12:4) [statenode]            {\textbf{req. $U_k$}};
+        \node(waitu)   at (9  * 360/12 + 360/12:4) [statenode]            {\textbf{wait $U_k$}};
+        \node(compp)   at (8  * 360/12 + 360/12:4) [statenode]            {\textbf{comp. $P_k$}};
+        \node(writep1) at (7  * 360/12 + 360/12:4) [statenode]            {\textbf{write $P_{1k}$}};
+        \node(writep2) at (6  * 360/12 + 360/12:4) [statenode]            {\textbf{write $P_{2k}$}};
+        \node(done)    at (5  * 360/12 + 360/12:4) [statenode, accepting] {\textbf{done}};
 
         \path[->] (idle) edge[loop above] node {i\_start = 0} (idle);
         \draw[->] (idle) edge[above] node {i\_start = 1} (reqw);
-        \draw[->] (reqw) -- (fetchw);
+        \draw[->] (reqw) -- (waitw);
+        \draw[->] (waitw) -- (fetchw);
         \draw[->] (fetchw) -- (requ);
         \draw[->] (fetchw) edge[above] node {W = 0} (done);
-        \draw[->] (requ) -- (fetchu);
-        \draw[->] (fetchu) -- (compp);
+        \draw[->] (requ) -- (waitu);
+        \draw[->] (waitu) -- (compp);
         \draw[->] (compp) -- (writep1);
         \draw[->] (writep1) -- (writep2);
         \draw[->] (writep2) edge[above] node {k != W} (requ);
@@ -52,7 +54,7 @@ Il convolutore descritto in sezione \ref{section:convolutore} potrebbe essere im
 
 Considerando la dimensione di indirizzamento, è stato utilizzato un approccio differente per il calcolo di $P$ che permette di elaborare un byte del flusso $U$ in un singolo ciclo di clock.
 
-All'interno del componente viene mantenuto un buffer composto da un vettore di 10 elementi in grado di memorizzare il byte in ingresso e gli ultimi due bit del byte letto durante lo step precedente. Questo ci permette di eseguire le equazioni \ref{eq:p1k} e \ref{eq:p2k} su ciascuno degli 8 bit letti in un singolo ciclo. Come mostrato in figura \ref{code:calcolop}, in VHDL questo viene ottenuto tramite un ciclo \verb|for| che elabora il byte in ingesso e che produce i due byte del flusso in uscita $P$. Tale codice applica quindi il convolutore a tutti i bit letti come mostrato in figura \ref{fig:schemacalcolop}.
+All'interno del componente viene mantenuto un buffer composto da un vettore di 2 elementi in grado di memorizzare gli ultimi due bit del byte $U$ letto durante il ciclo precedente. Nello stato \textbf{COMPUTE\_P} il byte $U$ corrente viene letto dalla memoria e associato ai 2 bit del buffer tramite una variabile. Grazie a questo possiamo eseguire le equazioni \ref{eq:p1k} e \ref{eq:p2k} su ciascuno degli 8 bit letti in un singolo ciclo. Come mostrato in figura \ref{code:calcolop}, in VHDL questo viene ottenuto tramite un ciclo \verb|for| che elabora il byte in ingesso e che produce i due byte del flusso in uscita $P$. Tale codice applica quindi il convolutore a tutti i bit letti come mostrato in figura \ref{fig:schemacalcolop}.
 
 Il risultato è un componente che riesce ad elaborare ciascun byte letto dalla memoria in un singolo ciclo di clock, riducendo così il tempo che il convolutore impiega per elaborare il flusso in ingresso $U$. Il vantaggio in termini di tempo viene ottenuto a discapito delle risorse hardware utilizzare, infatti vengono sintetizzate le eq. \ref{eq:p1k} e \ref{eq:p2k} per 8 volte.
 
@@ -63,9 +65,8 @@ Il risultato è un componente che riesce ad elaborare ciascun byte letto dalla m
 -- Compute the 1/2 convolutional code
 for k in 7 downto 0 loop
     -- Compute P1k and P2k
-    next_P(k * 2 + 1) <= conv_state(k + 2) xor conv_state(k);
-    next_P(k * 2)     <= conv_state(k + 2) xor conv_state(k + 1)
-                                           xor conv_state(k);
+    P(k * 2 + 1) <= U(k + 2) xor U(k);
+    P(k * 2)     <= U(k + 2) xor U(k + 1) xor U(k);
 end loop;
     \end{verbatim}
     \end{varwidth}
