@@ -8,9 +8,9 @@ Il dispositivo progettato è perfettamente sintetizzabile ed occupa le risorse m
         \hline
         Resource & Utilization \\
         \hline
-        LUT      & $62$        \\
+        LUT      & $63$        \\
         \hline
-        FF       & $39$        \\
+        FF       & $60$        \\
         \hline
         IO       & $38$        \\
         \hline
@@ -29,23 +29,23 @@ Analizzando il timing report mostrato in figura \ref{table:timingreport} è poss
         \hline
         \multicolumn{2}{|c|}{Setup}                          \\
         \hline
-        Worst negative slack (WNS)              & $95.6ns$   \\
+        Worst negative slack (WNS)              & $95.491ns$ \\
         \hline
         Total negative slack (TNS)              & $0.00ns$   \\
         \hline
         Number of failing endpoints             & $0$        \\
         \hline
-        Total number of endpoints               & $65$       \\
+        Total number of endpoints               & $98$       \\
         \hline
         \multicolumn{2}{|c|}{Hold}                           \\
         \hline
-        Worst hold slack (WHS)                  & $0.287ns$  \\
+        Worst hold slack (WHS)                  & $0.239$    \\
         \hline
         Total hold slack (THS)                  & $0.000ns$  \\
         \hline
         Number of failing endpoints             & $0$        \\
         \hline
-        Total number of endpoints               & $65$       \\
+        Total number of endpoints               & $98$       \\
         \hline
         \multicolumn{2}{|c|}{Pulse width}                    \\
         \hline
@@ -55,7 +55,7 @@ Analizzando il timing report mostrato in figura \ref{table:timingreport} è poss
         \hline
         Number of failing endpoints             & $0$        \\
         \hline
-        Total number of endpoints               & $40$       \\
+        Total number of endpoints               & $61$       \\
         \hline
     \end{tabular}
     \caption{Timing report}
@@ -68,10 +68,35 @@ Lo sviluppo del dispositivo in codice VHDL è stato validato tramite i test benc
 
 \subsection{Correzione delle simulazioni comportamentali}
 
-Successivamente alla consegna del progetto, il docente mi ha fatto notare come il componente sviluppato fallisse le simulazioni comportamentali mentre passasse tutte le altre. La causa del problema era un errato accesso alla memoria nelle le fasi di lettura, durante le quali non si considerava il suo ritardo. In particolare, sia la memoria che lo stato del componente venivano aggiornati sul fronte di salita del clock. Dagli stati \textbf{REQUEST\_W} e \textbf{REQUEST\_U}, nei quali si impostano i segnali \verb|o_address| e \verb|o_en|, si passava immediatamente alle loro controparti \textbf{FETCH\_W} e \textbf{FETCH\_U}, nelle quali si legge il segnale \verb|i_data|. Non era stato considerato il fatto che la memoria percepisce le modifiche sui segnali solo al successivo rising edge, proprio nello stesso momento in cui ci si aspettava di poter leggere il dato.
+Successivamente alla consegna del progetto, il docente mi ha fatto notare come il componente sviluppato fallisse le simulazioni comportamentali mentre passasse tutte le altre. La causa del problema era un errato accesso alla memoria nelle le fasi di lettura, durante le quali non si considerava il tempo necessario per recuperare il dato. In particolare, sia la memoria che lo stato del componente venivano aggiornati sul fronte di salita del clock. Dagli stati \textbf{REQUEST\_W} e \textbf{REQUEST\_U}, nei quali si impostano i segnali \verb|o_address| e \verb|o_en|, si passava immediatamente alle loro controparti \textbf{FETCH\_W} e \textbf{FETCH\_U}, nelle quali si legge il segnale \verb|i_data|. La memoria percepisce però le modifiche sui segnali solo al successivo rising edge, proprio nello stesso momento in cui ci si aspettava di poter leggere il dato.
 
 Durante le simulazioni comportamentali viene tenuto conto soltanto dei ritardi direttamente specificati, come il ritardo di $2ns$ utilizzato nella descrizione della memoria nei test bench, mentre non si considerano i ritardi delle porte logiche che andranno a costituire il componente. Per questo motivo, durante le simulazioni comportamentali, nel momento del rising edge, la memoria si attivava e veniva immediatamente letto il segnale \verb|i_data| che però non poteva contenere ancora i dati siccome la memoria ha un ritardo.
 
-Per correggere il problema è stato necessario inserire due stati di attesa, rispettivamente \textbf{WAIT\_W} e \textbf{WAIT\_U}. Inoltre si è cercato di ridurre il numero degli stati inserendo la lettura del byte $U$ direttamente in \textbf{COMPUTE\_U}, evitando così lo stato \textbf{FETCH\_U}. Non è stato possibile fare altrettanto con \textbf{FETCH\_W} perché esso deve essere eseguito una volta sola mentre \textbf{REQUEST\_U} viene ripetuto. Nello stesso momento si è riusciti a ridurre le risorse hardware consumate dal componente trasformando i segnali \verb|U_buffer| e \verb|next_U_buffer| in vettori da solo due elementi al posto che 10, e utilizzando una variabile durante il calcolo dei byte $P_k$.
+Per correggere il problema è stato implementato un accesso alla memoria più robusto aggiungendo 2 stati e bufferizzando i segnali collegati alla memoria. Una operazione di lettura segue ora 4 step:
 
-Questo problema non era stato individuato per due motivi. Durante lo sviluppo il componente era stato configurato rispetto al falling edge del clock, separando così i due eventi e non riscontrando il problema nelle simulazioni comportamentali. Successivamente la sensibilità era stata spostata sul rising edge e, siccome le simulazioni funzionali e temporali non rilevavano errori, non erano più state svolte simulazioni comportamentali.
+\begin{itemize}
+    \item \textbf{PREPARE}: Vengono impostati i segnali \verb|o_address_next| e \verb|o_en_next| che verranno applicati alla memoria al prossimo rising edge del clock;
+    \item \textbf{REQUEST}: Questo è a tutti gli effetti uno stato di attesa, è necessario in quanto i segnali \verb|o_address| e \verb|o_en| vengono modificati in questo momento;
+    \item \textbf{WAIT}: Si attende che la memoria legga il dato e lo riporti sul segnale \verb|i_data|. Qui si assume che il ritardo di accesso alla memoria non sia più grande di un periodo di clock, altrimenti sarebbe necessario aspettare ulteriore tempo;
+    \item \textbf{FETCH}: Il dato si considera disponibile e \verb|i_data| viene letto;
+\end{itemize}
+
+\begin{figure}[!ht]
+    \centering
+    \begin{tikzpicture}
+        \node(prep)  at (0,   0) [statenode, initial]   {\textbf{prep.}};
+        \node(req)   at (2.5, 0) [statenode]            {\textbf{req.}};
+        \node(wait)  at (5,   0) [statenode]            {\textbf{wait}};
+        \node(fetch) at (7.5, 0) [statenode, accepting] {\textbf{fetch}};
+
+        \draw[->] (prep) -- (req);
+        \draw[->] (req)  -- (wait);
+        \draw[->] (wait) -- (fetch);
+    \end{tikzpicture}
+    \caption{Sequenza di un'operazione di lettura da memoria}
+    \label{fig:letturamemoria}
+\end{figure}
+
+Sono quindi stati aggiunti 4 nuovi stati: \textbf{PREPARE\_W}, \textbf{WAIT\_W}, \textbf{PREPARE\_W} e \textbf{WAIT\_U}. Inoltre si è cercato di ridurre il numero degli stati inserendo la lettura del byte $U$ direttamente in \textbf{COMPUTE\_U}, evitando così \textbf{FETCH\_U}. Non è stato possibile fare altrettanto con \textbf{FETCH\_W} perché esso deve essere eseguito una volta sola mentre \textbf{PREPARE\_U} viene ripetuto.
+
+Questo problema non era stato individuato per due motivi. Durante lo sviluppo il componente era stato configurato rispetto al falling edge del clock, separando così i due eventi e non riscontrando il problema nelle simulazioni comportamentali. Il risultato era una sequenza simile a quella indicata in figura \ref{fig:letturamemoria}. Successivamente la sensibilità era stata spostata sul rising edge e, siccome le simulazioni funzionali e temporali non rilevavano errori, non erano più state svolte simulazioni comportamentali.
