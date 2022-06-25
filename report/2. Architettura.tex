@@ -69,7 +69,7 @@ Il risultato è un componente che riesce ad elaborare ciascun byte letto dalla m
         \begin{verbatim}
 -- Shift the current value and append U from memory
 next_U_buffer <= i_data(1 downto 0);
-U             := next_U_buffer(1 downto 0) & i_data;
+U             := U_buffer(1 downto 0) & i_data;
 
 -- Compute the 1/2 convolutional code
 for k in 7 downto 0 loop
