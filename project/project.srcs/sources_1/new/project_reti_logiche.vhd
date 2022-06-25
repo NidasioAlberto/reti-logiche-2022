@@ -83,6 +83,7 @@ begin
         o_we_next      <= '0';
         o_data_next    <= "00000000";
 
+        -- By default keep this values the same
         next_state    <= current_state;
         next_W        <= W;
         next_U_count  <= U_count;
@@ -91,6 +92,7 @@ begin
 
         case current_state is
             when IDLE =>
+                -- Wait for the start signal
                 if (i_start = '1') then
                     next_state <= PREPARE_W;
                 else
@@ -105,13 +107,16 @@ begin
 
                 next_state <= REQUEST_W;
             when REQUEST_W =>
+                -- Wait the signals to be propagated to the memory
                 next_state <= WAIT_W;
             when WAIT_W =>
+                -- Whait for the memory to read the data
                 next_state <= FETCH_W;
             when FETCH_W =>
                 -- Read W from the memory data bus
                 next_W <= CONV_INTEGER(i_data);
 
+                -- Immediately stop of the lenght of U is 0
                 if CONV_INTEGER(i_data) = 0 then
                     -- If the input stream is empty
                     o_done_next <= '1';
@@ -126,8 +131,10 @@ begin
 
                 next_state <= REQUEST_U;
             when REQUEST_U =>
+                -- Wait the signals to be propagated to the memory
                 next_state <= WAIT_U;
             when WAIT_U =>
+                -- Whait for the memory to read the data
                 next_state <= COMPUTE_P;
             when COMPUTE_P =>
                 -- Shift the current value and append U from memory
@@ -141,7 +148,7 @@ begin
                     next_P_buffer(k * 2)     <= current_U(k + 2) xor current_U(k + 1) xor current_U(k);
                 end loop;
 
-                -- Next we need to write P1 and P2
+                -- Next we need to write P1
                 next_state <= WRITE_P1;
             when WRITE_P1 =>
                 -- Write P1
